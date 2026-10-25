@@ -1,0 +1,18 @@
+{
+  "name": "@morvan/accueil",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4201",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview --host 127.0.0.1 --port 4201 --strictPort"
+  },
+  "dependencies": {
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "@module-federation/vite": "1.23.5",
+    "@morvan/plugin-sdk": "0.1.0"
+  }
+}

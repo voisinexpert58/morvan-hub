@@ -1,0 +1,24 @@
+MORVAN EXPLORER — DÉMONSTRATION V1 EN CONSTRUCTION
+
+Cette version corrige le dossier demo : Morvan Explorer est bien présent.
+
+OUVRIR MORVAN EXPLORER (SITE PUBLIC) :
+  Windows : double-cliquer sur DEMARRER_DEMO_WINDOWS.bat
+  Ou : ouvrir un terminal dans ce dossier et saisir
+       py -m http.server 8080
+  Puis : http://localhost:8080/
+
+OUVRIR MORVAN PRO (ADMINISTRATION) :
+  Cliquer sur « Espace Pro » en haut du guide,
+  ou saisir http://localhost:8080/pro.html
+
+Vous pouvez essayer :
+  - l'accueil touristique, les 8 catégories et les 12 fiches fictives ;
+  - la recherche, les filtres et les favoris ;
+  - la navigation dans les fiches ;
+  - la carte générale du Morvan (Internet nécessaire) ;
+  - le formulaire de proposition (brouillon local, pas de transmission) ;
+  - les 3 modules du tableau de bord Pro.
+
+NE PAS OUVRIR index.html EN DOUBLE-CLIQUANT : serveur local requis.
+Les adresses ne sont pas réelles et la V1 n'est pas prête pour publication.

@@ -1,0 +1,21 @@
+MORVAN HUB — V1 EN COURS DE CONSTRUCTION
+DÉMONSTRATION CORRIGÉE — 20 OCTOBRE 2026
+
+LE GUIDE TOURISTIQUE PUBLIC MORVAN EXPLORER EST MAINTENANT
+LE POINT D’ENTRÉE DE LA DÉMONSTRATION.
+
+Démarrer :
+1. Ouvrir un terminal dans le dossier demo.
+2. Lancer : py -m http.server 8080
+   (ou python -m http.server 8080)
+3. Ouvrir http://localhost:8080/
+   => MORVAN EXPLORER (accueil, 8 catégories, 12 fiches fictives).
+4. Cliquer sur « Espace Pro » en haut à droite pour ouvrir l'administration.
+   => ou accéder directement à http://localhost:8080/pro.html
+
+ATTENTION : les adresses sont fictives, les propositions ne quittent pas
+le navigateur et la carte n'affiche aucun emplacement d'établissement.
+L'authentification et la base Supabase ne sont pas encore connectées.
+Morvan Hub reste en V1 EN CONSTRUCTION (pas de V2).
+
+Documents : README.md, ETAT-PROJET-V1.md et backlog.

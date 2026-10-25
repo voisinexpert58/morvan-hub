@@ -1,0 +1,38 @@
+{
+  "registryVersion": 1,
+  "modules": [
+    {
+      "id": "morvan.accueil",
+      "name": "Morvan Accueil",
+      "description": "Livret d'accueil et recommandations locales pour les hébergements.",
+      "category": "Hébergements",
+      "icon": "home",
+      "version": "0.1.0",
+      "coreApiVersion": "1",
+      "entry": "./modules/accueil.mjs",
+      "initiallyEnabled": true
+    },
+    {
+      "id": "morvan.agenda",
+      "name": "Morvan Agenda",
+      "description": "Programme des événements, annonces et diffusion locale.",
+      "category": "Vie locale",
+      "icon": "calendar",
+      "version": "0.1.0",
+      "coreApiVersion": "1",
+      "entry": "./modules/agenda.mjs",
+      "initiallyEnabled": true
+    },
+    {
+      "id": "morvan.producteurs",
+      "name": "Morvan Producteurs",
+      "description": "Catalogue saisonnier et futures précommandes en circuit court.",
+      "category": "Commerces",
+      "icon": "store",
+      "version": "0.1.0",
+      "coreApiVersion": "1",
+      "entry": "./modules/producteurs.mjs",
+      "initiallyEnabled": false
+    }
+  ]
+}

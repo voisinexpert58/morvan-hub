@@ -1,0 +1,22 @@
+{
+  "name": "morvan-hub-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "modules/*", "packages/*"],
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev:shell": "npm run dev -w @morvan/pro-shell",
+    "build:shell": "npm run build -w @morvan/pro-shell",
+    "build:accueil": "npm run build -w @morvan/accueil",
+    "serve:accueil": "npm run preview -w @morvan/accueil",
+    "check:registry": "node ./scripts/validate-registry.mjs",
+    "typecheck": "npm run typecheck -w @morvan/pro-shell && npm run typecheck -w @morvan/accueil"
+  },
+  "devDependencies": {
+    "vite": "8.3.4",
+    "typescript": "5.9.3",
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0"
+  }
+}

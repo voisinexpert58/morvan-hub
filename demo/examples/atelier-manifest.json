@@ -1,0 +1,11 @@
+{
+  "id": "morvan.atelier",
+  "name": "Morvan Ateliers",
+  "description": "Exemple d'extension ajoutée sans modification du noyau.",
+  "category": "Activités",
+  "icon": "store",
+  "version": "0.1.0",
+  "coreApiVersion": "1",
+  "entry": "./modules/atelier.mjs",
+  "initiallyEnabled": false
+}

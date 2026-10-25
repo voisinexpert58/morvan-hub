@@ -1,0 +1,19 @@
+{
+  "registryVersion": 1,
+  "modules": [
+    {
+      "id": "morvan.accueil",
+      "name": "Morvan Accueil",
+      "description": "Livret d'accueil pour hébergements, chargé depuis une application déployée séparément.",
+      "version": "0.1.0",
+      "coreApiVersion": "1",
+      "permissions": ["accueil:read"],
+      "remote": {
+        "name": "morvan_accueil",
+        "entry": "http://localhost:4201/remoteEntry.js",
+        "expose": "./App",
+        "type": "module"
+      }
+    }
+  ]
+}
