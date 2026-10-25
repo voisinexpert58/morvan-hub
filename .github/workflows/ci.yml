@@ -1,0 +1,24 @@
+name: Vérifications Morvan Hub V1
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  demo-tests:
+    name: Tests de démonstration et registre
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Tester Morvan Explorer et Morvan Pro
+        run: node --test demo/tests/*.test.mjs
+      - name: Vérifier le catalogue de modules
+        working-directory: platform
+        run: node scripts/validate-registry.mjs
