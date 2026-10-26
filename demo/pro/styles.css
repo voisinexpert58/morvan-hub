@@ -1,0 +1,19 @@
+:root {font-family:system-ui,sans-serif;color:#203f34;background:#f5f3ed;font-synthesis:none}
+* {box-sizing:border-box}
+body {margin:0}
+.pro-workspace {max-width:1100px;margin:auto;padding:28px 20px 60px}
+.pro-workspace header {border-bottom:1px solid #bcc9bd;padding-bottom:20px}
+.pro-workspace section {background:white;border:1px solid #d8ded7;border-radius:16px;padding:24px;margin:24px 0}
+.pro-workspace form {max-width:680px;display:grid;gap:14px}
+.pro-workspace label {display:grid;gap:6px;font-weight:600}
+.pro-workspace input,.pro-workspace textarea,.pro-workspace select {width:100%;padding:12px;font:inherit;border:1px solid #a3b4a9;border-radius:7px;color:inherit;background:white}
+.pro-workspace textarea {min-height:100px}
+.pro-workspace button {font:inherit;background:#203f34;color:white;border:0;border-radius:7px;padding:11px 16px;cursor:pointer}
+.pro-workspace button:disabled {opacity:.55;cursor:wait}
+.pro-workspace button:focus-visible,.pro-workspace a:focus-visible {outline:3px solid #a37532;outline-offset:3px}
+.pro-workspace article {padding:20px 0;border-top:1px solid #d8ded7;overflow-wrap:anywhere}
+.pro-workspace article p {white-space:pre-wrap}
+.pro-workspace small {display:inline-block;font-size:.8rem;padding:5px 10px;background:#e8eee6;border-radius:20px}
+.pro-actions {display:flex;gap:10px;flex-wrap:wrap}
+.pro-workspace a {color:inherit}
+.pro-workspace [role=status] {font-weight:600;white-space:pre-wrap}

@@ -1,20 +1,20 @@
 @echo off
 chcp 65001 >nul
-cd /d "%~dp0"
-where py >nul 2>nul
-if %errorlevel%==0 goto using_py
-where python >nul 2>nul
-if %errorlevel%==0 goto using_python
-echo Python est necessaire pour lancer la demonstration.
-echo Installez Python ou lancez un serveur HTTP dans ce dossier.
+cd /d "%~dp0.."
+where npm >nul 2>nul
+if errorlevel 1 (
+  echo Installez Node.js 22 puis relancez ce fichier.
+  pause
+  exit /b 1
+)
+if not exist node_modules (
+  echo Installez les dependances avec npm ci depuis ce dossier.
+  pause
+  exit /b 1
+)
+echo Explorer : http://localhost:5173/index.html
+echo Pro : http://localhost:5173/pro.html
+echo Voir SUPABASE-INTEGRATION.md pour configurer la connexion.
+call npm run dev -- --port 5173 --strictPort
 pause
-exit /b 1
-:using_py
-start "" "http://localhost:8080/"
-py -m http.server 8080
-goto end
-:using_python
-start "" "http://localhost:8080/"
-python -m http.server 8080
-:end
-pause
+

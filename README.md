@@ -1,4 +1,12 @@
-# Morvan Hub — V1 en cours de construction (starter technique 0.1)
+# Morvan Hub V1 — intégration Supabase
+
+Le parcours connecté Explorer/Pro est décrit dans [SUPABASE-INTEGRATION.md](SUPABASE-INTEGRATION.md) : audit, rôles, migrations, configuration et tests. Commencer à la **racine du dépôt** avec `npm ci` puis `npm run dev`. Sans projet Supabase configuré, le site indique explicitement que la connexion est indisponible. Aucun déploiement n'est réalisé par cette modification.
+
+Les instructions historiques ci-dessous concernent le démonstrateur du 20 octobre. Le nouveau parcours nécessite la compilation décrite ci-dessus ; les anciennes instructions de lancement direct ne s'appliquent plus aux entrées Explorer et Pro.
+
+---
+
+# Archive — starter technique du 20 octobre 2026
 
 **Mise à jour du dossier : 20 octobre 2026 · version produit V1 en cours de construction**
 
@@ -178,3 +186,5 @@ La version V1 ne sera terminée que lorsque **Morvan Explorer public et Morvan P
 ---
 
 **Positionnement préservé** : Morvan Explorer reste un guide touristique indépendant, éditorial et participatif ; Morvan Pro peut vendre des modules professionnels sans vendre les classements ni les coups de cœur du guide.
+
+

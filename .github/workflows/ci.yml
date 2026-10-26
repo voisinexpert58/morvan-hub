@@ -22,3 +22,47 @@ jobs:
       - name: Vérifier le catalogue de modules
         working-directory: platform
         run: node scripts/validate-registry.mjs
+
+  supabase-client:
+    name: Client, RLS embarquée et parcours navigateur
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+
+  platform-build:
+    name: Socle Pro et module Accueil
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm ci --prefix platform
+      - run: npm run typecheck --prefix platform
+      - run: npm run build:shell --prefix platform
+      - run: npm run build:accueil --prefix platform
+
+  supabase-database:
+    name: Migrations et pgTAP dans Supabase local
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.0
+      - run: supabase start --workdir platform
+      - run: supabase db reset --workdir platform
+      - run: supabase test db --workdir platform
+      - if: always()
+        run: supabase stop --workdir platform
+

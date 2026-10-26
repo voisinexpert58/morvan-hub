@@ -3,8 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": ["apps/*", "modules/*", "packages/*"],
-  "engines": { "node": ">=22.12.0" },
+  "workspaces": [
+    "apps/*",
+    "modules/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev:shell": "npm run dev -w @morvan/pro-shell",
     "build:shell": "npm run build -w @morvan/pro-shell",
@@ -13,10 +19,14 @@
     "check:registry": "node ./scripts/validate-registry.mjs",
     "typecheck": "npm run typecheck -w @morvan/pro-shell && npm run typecheck -w @morvan/accueil"
   },
+  "overrides": {
+    "undici": "7.30.1"
+  },
   "devDependencies": {
-    "vite": "8.3.4",
-    "typescript": "5.9.3",
     "@types/react": "19.2.0",
-    "@types/react-dom": "19.2.0"
+    "@types/react-dom": "19.2.0",
+    "typescript": "5.9.3",
+    "undici": "7.30.1",
+    "vite": "8.3.4"
   }
 }

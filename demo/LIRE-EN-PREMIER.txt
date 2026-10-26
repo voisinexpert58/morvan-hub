@@ -1,24 +1,17 @@
-MORVAN EXPLORER — DÉMONSTRATION V1 EN CONSTRUCTION
+MORVAN EXPLORER ET MORVAN PRO — V1
 
-Cette version corrige le dossier demo : Morvan Explorer est bien présent.
+Les entrées utilisent maintenant le client Supabase et nécessitent Vite.
+Le serveur Python historique ne permet pas de compiler cette intégration.
 
-OUVRIR MORVAN EXPLORER (SITE PUBLIC) :
-  Windows : double-cliquer sur DEMARRER_DEMO_WINDOWS.bat
-  Ou : ouvrir un terminal dans ce dossier et saisir
-       py -m http.server 8080
-  Puis : http://localhost:8080/
+Depuis le dossier parent : npm ci puis npm run dev.
+Explorer : http://localhost:5173/index.html
+Pro : http://localhost:5173/pro.html
 
-OUVRIR MORVAN PRO (ADMINISTRATION) :
-  Cliquer sur « Espace Pro » en haut du guide,
-  ou saisir http://localhost:8080/pro.html
+Lire ../SUPABASE-INTEGRATION.md avant de configurer un projet Supabase.
+Le fichier ../.env.local contient seulement l'URL et la clé publique.
+Aucune clé service_role ni clé secrète ne doit entrer dans le navigateur.
 
-Vous pouvez essayer :
-  - l'accueil touristique, les 8 catégories et les 12 fiches fictives ;
-  - la recherche, les filtres et les favoris ;
-  - la navigation dans les fiches ;
-  - la carte générale du Morvan (Internet nécessaire) ;
-  - le formulaire de proposition (brouillon local, pas de transmission) ;
-  - les 3 modules du tableau de bord Pro.
+Les anciens modules fictifs restent dans core/ et modules/ comme exemples.
+Le catalogue fictif d'Explorer n'est utilisé que si VITE_DEMO_MODE=true
+et qu'aucune configuration Supabase n'est renseignée.
 
-NE PAS OUVRIR index.html EN DOUBLE-CLIQUANT : serveur local requis.
-Les adresses ne sont pas réelles et la V1 n'est pas prête pour publication.
