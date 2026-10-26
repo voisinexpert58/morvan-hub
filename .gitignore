@@ -6,6 +6,8 @@ dist/
 build/
 **/build/
 coverage/
+test-results/
+playwright-report/
 *.tsbuildinfo
 
 # Secrets et configurations locales
@@ -30,3 +32,4 @@ Thumbs.db
 # Supabase local
 .supabase/
 supabase/.temp/
+

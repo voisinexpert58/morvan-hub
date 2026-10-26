@@ -1,4 +1,12 @@
-# Morvan Hub — État officiel du projet V1
+# Morvan Hub — état du 25 octobre 2026
+
+Le code Explorer/Pro utilise désormais un client Supabase, un parcours de contribution authentifié et des migrations de lieux/contributions avec droits en base. Voir [SUPABASE-INTEGRATION.md](SUPABASE-INTEGRATION.md) pour le périmètre, les tests et la configuration restante.
+
+**Aucun projet Supabase n'existe encore et aucun déploiement n'est effectué.** La prévisualisation PageShare protégée reste inchangée. L'état historique ci-dessous décrit la démonstration du 20 octobre, avant cette intégration.
+
+---
+
+# Archive — état du 20 octobre 2026
 
 **Date de référence : 20 octobre 2026**  
 **Statut produit : V1 EN COURS DE CONSTRUCTION**
@@ -55,3 +63,5 @@ Morvan Hub demeure en **V1**. Les étiquettes techniques telles que « starter 0
 - `COMMENCER-ICI.txt` : point d'entrée du dossier.
 
 **Cette fiche décrit le correctif du démonstrateur.** Les fonctionnalités de production sont suivies séparément dans le backlog.
+
+

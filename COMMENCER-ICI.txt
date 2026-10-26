@@ -1,21 +1,18 @@
-MORVAN HUB — V1 EN COURS DE CONSTRUCTION
-DÉMONSTRATION CORRIGÉE — 20 OCTOBRE 2026
+MORVAN HUB V1 — INTÉGRATION SUPABASE
 
-LE GUIDE TOURISTIQUE PUBLIC MORVAN EXPLORER EST MAINTENANT
-LE POINT D’ENTRÉE DE LA DÉMONSTRATION.
+1. Installer Node.js 22 (22.12 ou ultérieur pour le socle optionnel).
+2. Ouvrir un terminal à la racine de ce dossier et lancer : npm ci
+3. Copier .env.example vers .env.local et renseigner l'URL Supabase
+   et sa clé publique publishable. Ne jamais utiliser service_role.
+4. Lancer : npm run dev
+5. Ouvrir http://localhost:5173/index.html pour Explorer,
+   et http://localhost:5173/pro.html pour Pro.
 
-Démarrer :
-1. Ouvrir un terminal dans le dossier demo.
-2. Lancer : py -m http.server 8080
-   (ou python -m http.server 8080)
-3. Ouvrir http://localhost:8080/
-   => MORVAN EXPLORER (accueil, 8 catégories, 12 fiches fictives).
-4. Cliquer sur « Espace Pro » en haut à droite pour ouvrir l'administration.
-   => ou accéder directement à http://localhost:8080/pro.html
+Aucun projet Supabase n'existe encore : le code ne suffit pas à créer
+la base. SUPABASE-INTEGRATION.md décrit la création, les migrations,
+les rôles et la configuration Auth nécessaires.
+Sans configuration, les écrans l'indiquent explicitement.
 
-ATTENTION : les adresses sont fictives, les propositions ne quittent pas
-le navigateur et la carte n'affiche aucun emplacement d'établissement.
-L'authentification et la base Supabase ne sont pas encore connectées.
-Morvan Hub reste en V1 EN CONSTRUCTION (pas de V2).
+La prévisualisation PageShare et son mot de passe restent inchangés.
+Aucun déploiement n'a été réalisé.
 
-Documents : README.md, ETAT-PROJET-V1.md et backlog.
