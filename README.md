@@ -124,7 +124,7 @@ Les composants du noyau ne changent pas. Le chargement JS distant ne doit être 
 
 Migration initiale à examiner puis appliquer sur un **projet Supabase de développement** :
 
-`platform/supabase/migrations/20261019_001_core.sql`
+`platform/supabase/migrations/20261026100415_core.sql`
 
 Elle crée :
 
