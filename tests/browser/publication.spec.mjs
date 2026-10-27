@@ -11,7 +11,7 @@ async function backend(context) {
     create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
     grant usage on schema public,auth to anon,authenticated;
     grant execute on function auth.uid() to anon,authenticated;`);
-  for(const name of ['20261019_001_core.sql','20261025_002_places_contributions.sql']) {
+  for(const name of ['20261026100415_core.sql','20261026100441_places_contributions.sql']) {
     await db.exec((await readFile(new URL('../../platform/supabase/migrations/'+name,import.meta.url),'utf8')).replace('create extension if not exists pgcrypto;',''));
   }
   const ids={author:'00000000-0000-0000-0000-000000000001',reviewer:'00000000-0000-0000-0000-000000000002'};
