@@ -1,0 +1,44 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile,readdir} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+import {installStorageFixture} from './helpers/storage.mjs';
+
+test('verified establishment: routine publication, identity protection, revocation and moderation',async t=>{
+ const db=new PGlite();t.after(()=>db.close());
+ await db.exec(`create role anon;create role authenticated;create schema auth;
+ create table auth.users(id uuid primary key);
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
+ await installStorageFixture(db);
+ for(const name of (await readdir(new URL('../platform/supabase/migrations/',import.meta.url))).filter(n=>n.endsWith('.sql')).sort())
+  await db.exec((await readFile(new URL('../platform/supabase/migrations/'+name,import.meta.url),'utf8')).replace('create extension if not exists pgcrypto;',''));
+ const author='00000000-0000-0000-0000-000000000001',reviewer='00000000-0000-0000-0000-000000000002',other='00000000-0000-0000-0000-000000000003',org='00000000-0000-0000-0000-000000000010';
+ await db.exec(`insert into auth.users values('${author}'),('${reviewer}'),('${other}');
+ insert into private.editorial_reviewers values('${reviewer}');
+ insert into public.organizations(id,slug,name) values('${org}','test','Test');
+ insert into public.organization_members(organization_id,user_id,role) values('${org}','${author}','editor');`);
+ const as=async uid=>{await db.exec(`reset role;set role ${uid?'authenticated':'anon'}`);await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid||'']);};
+ const denied=(fn,code='42501')=>assert.rejects(fn,e=>e.code===code);
+ const move=(c,action)=>db.query('select * from public.transition_contribution($1,$2,$3)',[c.id,c.version,action]).then(r=>r.rows[0]);
+ const publish=c=>db.query('select * from public.publish_place_update($1,$2)',[c.id,c.version]).then(r=>r.rows[0]);
+ const eligible=c=>db.query('select public.can_publish_place_update($1) ok',[c.id]).then(r=>r.rows[0].ok);
+ const save=(c,name='Lieu vérifié',town='Mhère')=>db.query("select * from public.save_contribution($1,$2,$3,$4,'Hébergements',$5,'Une description actualisée.','Horaires actualisés')",[c?.id??null,c?.version??null,org,name,town]).then(r=>r.rows[0]);
+ await as(author);let c=await save();assert.equal(await eligible(c),false);await denied(()=>publish(c));
+ c=await move(c,'submit');await as(reviewer);c=await move(c,'validate');c=await move(c,'publish');
+ await as(author);c=await move(c,'revise');c=await save(c);await denied(()=>publish(c));
+ await denied(()=>db.query('insert into private.verified_place_management(contribution_id,organization_id,verified_by) values($1,$2,$3)',[c.id,org,author]));
+ await db.exec('reset role');await db.query('insert into private.verified_place_management(contribution_id,organization_id,verified_by) values($1,$2,$3)',[c.id,org,reviewer]);
+ await as(other);assert.equal(await eligible(c),false);await denied(()=>publish(c));
+ await as(author);assert.equal(await eligible(c),true);await denied(()=>publish({...c,version:c.version-1}),'40001');
+ c=await save(c,'Autre établissement');assert.equal(await eligible(c),false);await denied(()=>publish(c));
+ c=await save(c,'Lieu vérifié','Autun');assert.equal(await eligible(c),false);await denied(()=>publish(c));
+ c=await save(c);assert.equal(await eligible(c),true);c=await publish(c);assert.equal(c.status,'published');assert.equal(c.reviewed_by,null);
+ await as();assert.equal((await db.query('select description from public.places')).rows[0].description,'Une description actualisée.');await denied(()=>publish(c));
+ await as(author);c=await move(c,'revise');
+ await db.exec('reset role');await db.query('delete from public.organization_members where user_id=$1',[author]);
+ await as(author);assert.equal(await eligible(c),false);await denied(()=>publish(c));
+ await db.exec('reset role');await db.query("insert into public.organization_members(organization_id,user_id,role) values($1,$2,'editor')",[org,author]);
+ await as(reviewer);c=await move(c,'unpublish');await as(author);assert.equal(await eligible(c),false);await denied(()=>publish(c));
+ await db.exec('reset role');assert.equal((await db.query("select count(*)::int n from private.contribution_audit where action='professional_update_published'")).rows[0].n,1);
+});
