@@ -9,6 +9,7 @@ const labels = {draft:'Brouillon',submitted:'À valider',validated:'Validée',pu
 export async function mountPro(root, { explorerHref = './index.html#explorer' } = {}) {
   let client, repo, user = null, rows = [], organizations = [], memberships = [], reviews = new Map(), published = new Set();
   let current = null, notice = '', busy = false, generation = 0;
+  let directUpdates = new Map();
   let photoFiles = [], photoPaths = [], releasePhotoDownloads = ()=>{};
   function resetPhotos(paths=[]) {
     photoFiles.forEach(item=>URL.revokeObjectURL(item.url)); photoFiles=[]; photoPaths=[...paths];
@@ -48,12 +49,13 @@ export async function mountPro(root, { explorerHref = './index.html#explorer' } 
         <div id="photo-preview" class="photo-grid" aria-live="polite"></div>
       </fieldset>
       <button ${busy?'disabled':''}>Enregistrer le brouillon</button>${c?button('cancel','Annuler'):''}
-      <p>Le brouillon reste privé. Soumettez-le ensuite à validation ; une personne habilitée distincte de l’auteur doit le valider puis le publier.</p>
+      <p>Enregistrez vos modifications, puis choisissez leur publication. Les mises à jour courantes d’une fiche publiée dont la gestion est vérifiée peuvent être publiées directement. Les nouvelles fiches et changements d’identité passent par la validation.</p>
     </form></section><section><h2>Contributions et validation</h2>${button('refresh','Actualiser')}
     ${rows.length?rows.map(row=>`<article><h3>${e(row.name)} <small>${labels[row.status]}</small></h3><p>${e(row.town)} · ${e(row.category)}</p><p>${e(row.description)}</p><p>${e(row.details)}</p>${row.review_note?`<p><strong>Retour de validation :</strong> ${e(row.review_note)}</p>`:''}
       ${published.has(row.id)?'<p>Une version publiée est visible sur Explorer.</p>':'<p>Non visible sur Explorer.</p>'}
       ${gallery(row.photo_paths)}
       <div class="pro-actions">
+      ${directUpdates.get(row.id)?'<p>Vous pouvez publier cette mise à jour sans validation préalable.</p>'+button('publish-update','Publier mes modifications',row.id):''}
       ${canEdit(row)&&['draft','rejected'].includes(row.status)?button('edit','Modifier',row.id)+button('submit','Soumettre à validation',row.id)+(!published.has(row.id)?button('delete','Supprimer le brouillon',row.id):''):''}
       ${canEdit(row)&&!['draft','rejected'].includes(row.status)?button('revise','Reprendre en brouillon',row.id):''}
       ${canReview(row)&&row.status==='submitted'?button('validate','Valider',row.id):''}
@@ -74,8 +76,10 @@ export async function mountPro(root, { explorerHref = './index.html#explorer' } 
     ]);
     if (memberResult.error) throw new Error(memberResult.error.message);
     const nextReviews = new Map(await Promise.all([...new Set([null,...nextRows.map(c=>c.organization_id)])].map(async id=>[id,await repo.canReview(id)])));
+    const nextDirectUpdates = new Map(await Promise.all(nextRows.filter(c=>c.organization_id && c.status==='draft').map(async c=>[c.id,await repo.canPublishUpdate(c.id)])));
     if (stamp !== generation) return;
     user = nextUser; rows = nextRows; organizations = nextOrgs; memberships = memberResult.data; reviews = nextReviews;
+    directUpdates = nextDirectUpdates;
     published = new Set(places.map(p=>p.id)); render();
   }
   async function run(task) {
@@ -155,7 +159,8 @@ export async function mountPro(root, { explorerHref = './index.html#explorer' } 
         let note = '';
         if (action==='reject') {note=window.prompt('Quelle correction est nécessaire ?'); if (note===null) return; if (!note.trim()) throw new Error('Indiquez la correction attendue.');}
         if (action==='unpublish' && !window.confirm('Retirer cette fiche du catalogue public ?')) return;
-        await repo.transition(row,action,note);
+        if (action==='publish-update') await repo.publishUpdate(row);
+        else await repo.transition(row,action,note);
       }
       current=null; resetPhotos(); notice='Modification enregistrée. Explorer affiche les versions publiées lors de son actualisation.'; await refresh();
     });
