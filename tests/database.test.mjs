@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
+import { installStorageFixture } from './helpers/storage.mjs';
 import { PGlite } from '@electric-sql/pglite';
 
 test('PostgreSQL: RLS, organization boundaries and complete publication lifecycle', async t => {
@@ -13,7 +14,8 @@ test('PostgreSQL: RLS, organization boundaries and complete publication lifecycl
     $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     grant usage on schema public,auth to anon,authenticated;
     grant execute on function auth.uid() to anon,authenticated;`);
-  for (const name of ['20261026100415_core.sql','20261026100441_places_contributions.sql']) {
+  await installStorageFixture(db);
+  for (const name of (await readdir(new URL('../platform/supabase/migrations/',import.meta.url))).filter(n=>n.endsWith('.sql')).sort()) {
     const sql = await readFile(new URL('../platform/supabase/migrations/'+name,import.meta.url),'utf8');
     // pgcrypto extension isn't packaged in PGlite; gen_random_uuid is built into PG.
     await db.exec(sql.replace('create extension if not exists pgcrypto;', ''));
