@@ -2,6 +2,14 @@
 
 ## État réel
 
+**Actualisation du 27 octobre 2026 :** la PR n°7 est fusionnée. Le projet Supabase est créé et les deux migrations sont appliquées ; les tables sont vides, RLS est activée et les requêtes anonymes vers les contributions sont refusées. Le client local est configuré avec la clé publique. La prévisualisation PageShare n'a pas été republiée et conserve sa protection.
+
+L'historique distant a enregistré ces migrations sous `20261026100415_core` et `20261026100441_places_contributions`. Leur SQL a été comparé intégralement aux fichiers du dépôt (seuls les retours à la ligne et espaces de fin ont été normalisés) : il est identique. Les fichiers sont renommés pour reprendre ces identifiants canoniques, sans nouvelle migration et sans modification de la base ni de son historique. Les anciens noms étaient `20261019_001_core.sql` et `20261025_002_places_contributions.sql`. Les tests utilisent les noms canoniques ; ne pas conserver de copies sous les anciens noms dans le dossier des migrations.
+
+Pour d'autres environnements ayant déjà appliqué les anciens identifiants, vérifier leur historique avant toute mise à jour : ce renommage correspond au projet Morvan Hub actuel et ne répare pas automatiquement les autres bases. Pour ce projet, les deux migrations doivent être reconnues comme déjà appliquées lors de la prochaine synchronisation.
+
+Les sections suivantes conservent le contexte de préparation du 25 octobre et les instructions d'installation. La création du projet et l'application initiale des migrations sont désormais effectuées. La recette Auth avec deux comptes distincts et l'attribution du rôle de réviseur restent à réaliser.
+
 Le 25 octobre 2026, aucun projet Supabase n'existe pour Morvan Hub (confirmation du propriétaire). Cette modification prépare le code, les migrations, les tests et le parcours utilisateur. Elle **ne déploie aucune base ni aucun site**. La prévisualisation PageShare existante et son mot de passe restent inchangés.
 
 ## Audit du dépôt de départ
