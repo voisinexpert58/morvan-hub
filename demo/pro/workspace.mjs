@@ -8,6 +8,7 @@ const labels = {draft:'Brouillon',submitted:'À valider',validated:'Validée',pu
 
 export async function mountPro(root, { explorerHref = './index.html#explorer' } = {}) {
   const reservationsHref = new URL('./reservations.html',new URL(explorerHref,location.href)).href;
+  const welcomeHref = new URL('./livrets.html',new URL(explorerHref,location.href)).href;
   let client, repo, user = null, rows = [], organizations = [], memberships = [], reviews = new Map(), published = new Set();
   let current = null, notice = '', busy = false, generation = 0;
   let directUpdates = new Map();
@@ -35,7 +36,7 @@ export async function mountPro(root, { explorerHref = './index.html#explorer' } 
     }
     const c = current;
     const orgOptions = organizations.filter(o => memberships.some(m => m.organization_id === o.id && ['owner','admin','editor'].includes(m.role)));
-    root.innerHTML = frame(`<section><h2>Extensions professionnelles</h2><p>Gérez les demandes de table ou de séjour et suivez leurs réponses.</p><a href="${e(reservationsHref)}">Ouvrir les réservations →</a></section><section><h2>${c?'Modifier le brouillon':'Proposer une adresse'}</h2><form id="place-form">
+    root.innerHTML = frame(`<section><h2>Extensions professionnelles</h2><p>Gérez les demandes de table ou de séjour et suivez leurs réponses.</p><a href="${e(reservationsHref)}">Ouvrir les réservations →</a><p>Préparez un livret public pour accueillir vos voyageurs.</p><a href="${e(welcomeHref)}">Gérer mes livrets d’accueil →</a></section><section><h2>${c?'Modifier le brouillon':'Proposer une adresse'}</h2><form id="place-form">
       <label>Organisation<select name="organization" ${c?'disabled':''}><option value="">Contribution personnelle</option>${orgOptions.map(o=>`<option value="${e(o.id)}" ${(c?.organization_id===o.id)?'selected':''}>${e(o.name)}</option>`).join('')}</select></label>
       <label>Nom du lieu<input name="name" required minlength="3" maxlength="100" value="${e(c?.name)}"></label>
       <label>Catégorie<select name="category" required>${categories.map(x=>`<option ${c?.category===x?'selected':''}>${e(x)}</option>`).join('')}</select></label>

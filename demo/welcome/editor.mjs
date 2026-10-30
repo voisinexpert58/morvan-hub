@@ -1,0 +1,33 @@
+import {getClient} from '../shared/backend.mjs';
+import {escapeHtml as e} from '../core/sdk.mjs';
+import {sections,bookMarkup} from './model.mjs';
+const root=document.querySelector('#editor'),status=document.querySelector('[role=status]');
+let client,books=[],places=[],published=[],selected=null,busy=false,generation=0;
+const check=r=>{if(r.error)throw Error(r.error.message);return r.data;};
+const row=r=>{const data=check(r);return Array.isArray(data)?data[0]:data;};
+const fields=[['welcome','Message de bienvenue'],['arrival','Horaires et indications d’arrivée'],['departure','Horaire de départ'],...sections.map(([key,,label])=>[key,label])];
+const bookURL=id=>new URL('./livret.html?place='+encodeURIComponent(id),location.href).href;
+function render(){
+ const current=books.find(b=>b.place_id===selected);
+ root.innerHTML=`<section><h2>Choisir un hébergement</h2><button data-action="refresh">Actualiser</button>${books.length?`<label>Hébergement<select id="select-book"><option value="">Sélectionnez une fiche</option>${books.map(b=>`<option value="${e(b.place_id)}" ${selected===b.place_id?'selected':''}>${e(places.find(p=>p.id===b.place_id)?.name||b.title)}</option>`).join('')}</select></label>`:'<p>Aucun livret attribué à votre compte. Cette extension nécessite un hébergement dont la gestion est vérifiée et un accès inclus dans votre formule.</p>'}</section>${current?`<section><h2>Préparer mon livret</h2><p class="book-status">${published.some(p=>p.place_id===selected)?'Une version publiée est accessible aux voyageurs. Les modifications du brouillon ne la changent pas.':'Ce livret n’est pas publié.'}</p><p>Le livret sera accessible par un lien public. N’y inscrivez ni code de porte, ni mot de passe Wi-Fi, ni données personnelles de voyageurs.</p><form id="book-form"><label>Titre du livret<input name="title" minlength="3" maxlength="100" required value="${e(current.title)}"></label>${fields.map(([key,label])=>`<details ${key==='welcome'?'open':''}><summary>${label}</summary><label for="book-${key}">${label}</label><textarea id="book-${key}" name="${key}" maxlength="5000">${e(current.content[key]||'')}</textarea></details>`).join('')}<p>Les rubriques laissées vides ne seront pas affichées. Pour les contacts, indiquez uniquement les coordonnées que vous souhaitez rendre publiques.</p><div class="pro-actions"><button ${current.entitled?'':'disabled'}>Enregistrer le brouillon</button><button type="button" data-action="preview">Prévisualiser</button></div></form><div class="welcome-toolbar"><button data-action="publish" ${current.entitled?'':'disabled'}>Publier la version enregistrée</button>${published.some(p=>p.place_id===selected)?`<a href="${e(bookURL(selected))}" target="_blank" rel="noopener">Ouvrir le livret public ↗</a><button data-action="copy">Copier le lien public</button><button data-action="withdraw">Retirer le livret public</button>`:''}</div><p>La publication ne porte que sur le dernier brouillon enregistré.</p><div id="preview"></div></section>`:''}`;
+}
+async function refresh(){const stamp=++generation;const u=await client.auth.getUser();if(!u.data.user){root.innerHTML='<section><h2>Connexion requise</h2><p>Connectez-vous à Bourgogne Pro, puis revenez dans « Livrets d’accueil ».</p><a href="./pro.html">Se connecter à Bourgogne Pro</a></section>';return;}
+ const results=await Promise.all([client.from('welcome_book_drafts').select('*').order('place_id'),client.from('places').select('id,name,town'),client.from('welcome_books').select('place_id,published_version')]);
+ if(stamp!==generation)return;[books,places,published]=results.map(check);if(!selected&&books.length===1)selected=books[0].place_id;render();}
+const formValue=()=>{const f=Object.fromEntries(new FormData(root.querySelector('#book-form')));return {title:f.title,content:Object.fromEntries(fields.map(([key])=>[key,f[key]||'']))};};
+async function run(task){if(busy)return;busy=true;const buttons=[...root.querySelectorAll('button:not(:disabled)')];buttons.forEach(b=>b.disabled=true);try{await task();}catch(error){status.textContent=error.message;}finally{busy=false;buttons.forEach(b=>{if(b.isConnected)b.disabled=false;});}}
+root.addEventListener('change',event=>{if(event.target.id==='select-book'){if(root.querySelector('#book-form')&&!confirm('Changer de livret abandonne les modifications non enregistrées. Continuer ?')){event.target.value=selected;return;}selected=event.target.value;status.textContent='';render();}});
+root.addEventListener('submit',event=>{event.preventDefault();if(!event.target.reportValidity())return;void run(async()=>{const b=books.find(b=>b.place_id===selected),f=formValue();const saved=row(await client.rpc('save_welcome_book',{p_id:selected,p_version:b.version,p_title:f.title,p_content:f.content}));books=books.map(b=>b.place_id===selected?saved:b);render();status.textContent='Brouillon enregistré. Publiez-le lorsque vous êtes prêt.';});});
+root.addEventListener('click',event=>{const action=event.target.closest('[data-action]')?.dataset.action;if(!action)return;void run(async()=>{
+ if(action==='refresh'){if(root.querySelector('#book-form')&&!confirm('Actualiser abandonne les modifications non enregistrées. Continuer ?'))return;await refresh();status.textContent='Liste actualisée.';return;}
+ const b=books.find(b=>b.place_id===selected);if(!b)return;
+ if(action==='preview'){root.querySelector('#preview').innerHTML=bookMarkup(formValue(),places.find(p=>p.id===selected),true);root.querySelector('#preview').scrollIntoView({behavior:'smooth'});return;}
+ if(action==='copy'){await navigator.clipboard.writeText(bookURL(selected));status.textContent='Lien public copié.';return;}
+ if(action==='publish'||action==='withdraw'){
+  if(action==='publish'&&JSON.stringify(formValue())!==JSON.stringify({title:b.title,content:Object.fromEntries(fields.map(([key])=>[key,b.content[key]||'']))}))throw Error('Enregistrez les modifications du formulaire avant de publier.');
+  if(!confirm(action==='publish'?'Publier ce livret accessible à toute personne disposant du lien ?':'Retirer le livret public ?'))return;
+  check(await client.rpc('publish_welcome_book',{p_id:selected,p_version:b.version,p_publish:action==='publish'}));await refresh();status.textContent=action==='publish'?'Livret publié. Vous pouvez partager son lien.':'Livret retiré. Le brouillon est conservé.';
+ }
+});});
+async function start(){try{client=await getClient();client.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT'){++generation;books=[];places=[];published=[];selected=null;root.innerHTML='<p>Vous êtes déconnecté. <a href="./pro.html">Se reconnecter</a></p>';}});await refresh();}catch(error){status.textContent=error.message;}}
+void start();
