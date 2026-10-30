@@ -1,15 +1,18 @@
 import {getClient} from '../shared/backend.mjs';
 import {bookMarkup} from './model.mjs';
+import {hydratePhotos} from '../shared/photos.mjs';
 const root=document.querySelector('#app');
 async function start(){try{
  const id=new URLSearchParams(location.search).get('place');
  if(!/^[0-9a-f-]{36}$/i.test(id||''))throw Error('Ce lien de livret est incomplet.');
  const client=await getClient();
- const {data,error}=await client.from('welcome_books').select('place_id,title,content,published_at').eq('place_id',id).maybeSingle();
+ const {data,error}=await client.from('welcome_books').select('place_id,title,content,published_at,photo_paths').eq('place_id',id).maybeSingle();
  if(error)throw error;if(!data)throw Error('Ce livret n’est pas disponible. Contactez votre hébergeur.');
  const result=await client.from('places').select('name,town').eq('id',id).maybeSingle();if(result.error)throw result.error;
  document.title=data.title+' — Livret d’accueil';
  root.innerHTML=bookMarkup(data,result.data||{});
+ const release=hydratePhotos(root,()=>Promise.resolve(client),'welcome-photos');
+ window.addEventListener('pagehide',release,{once:true});
  const toolbar=document.createElement('div');toolbar.className='welcome-toolbar';
  const print=document.createElement('button');print.textContent='Imprimer / enregistrer en PDF';print.onclick=()=>window.print();toolbar.append(print);root.querySelector('header').append(toolbar);
  if(location.hash)document.getElementById(location.hash.slice(1))?.scrollIntoView();
