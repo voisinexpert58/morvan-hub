@@ -223,6 +223,8 @@ test('personal login preserves the selected place and old reservation links redi
  try {
   await page.goto('/reservations.html?place=00000000-0000-0000-0000-000000000020');
   await expect(page).toHaveURL(/particulier.html\?place=/);
+  await expect(page.locator('a[href="./pro.html"]')).toHaveCount(0);
+  await expect(page.getByRole('navigation',{name:'Mon espace particulier'})).toBeVisible();
   await page.getByLabel('Adresse e-mail').fill('reviewer@example.test');
   await page.getByLabel('Mot de passe').fill('test-password');
   await page.getByRole('button',{name:'Se connecter',exact:true}).click();
