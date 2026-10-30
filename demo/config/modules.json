@@ -3,7 +3,7 @@
   "modules": [
     {
       "id": "morvan.accueil",
-      "name": "Morvan Accueil",
+      "name": "Bourgogne Accueil",
       "description": "Livret d'accueil et recommandations locales pour les hébergements.",
       "category": "Hébergements",
       "icon": "home",
@@ -14,7 +14,7 @@
     },
     {
       "id": "morvan.agenda",
-      "name": "Morvan Agenda",
+      "name": "Bourgogne Agenda",
       "description": "Programme des événements, annonces et diffusion locale.",
       "category": "Vie locale",
       "icon": "calendar",
@@ -25,7 +25,7 @@
     },
     {
       "id": "morvan.producteurs",
-      "name": "Morvan Producteurs",
+      "name": "Bourgogne Producteurs",
       "description": "Catalogue saisonnier et futures précommandes en circuit court.",
       "category": "Commerces",
       "icon": "store",
@@ -36,3 +36,4 @@
     }
   ]
 }
+

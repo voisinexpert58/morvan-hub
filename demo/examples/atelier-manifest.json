@@ -1,6 +1,6 @@
 {
   "id": "morvan.atelier",
-  "name": "Morvan Ateliers",
+  "name": "Bourgogne Ateliers",
   "description": "Exemple d'extension ajoutée sans modification du noyau.",
   "category": "Activités",
   "icon": "store",
@@ -9,3 +9,4 @@
   "entry": "./modules/atelier.mjs",
   "initiallyEnabled": false
 }
+
