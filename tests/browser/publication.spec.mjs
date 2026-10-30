@@ -184,7 +184,9 @@ test('reservation request stays pending until professional accepts; customer can
  const db=await backend(context,true);
  try {
   await login(page,'reviewer');
-  await page.goto('/reservations.html?place=00000000-0000-0000-0000-000000000020');
+  await page.goto('/particulier.html?place=00000000-0000-0000-0000-000000000020');
+  await expect(page.getByRole('heading',{name:'Mon espace particulier',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Mon extension Réservations'})).toHaveCount(0);
   await page.getByLabel('Date et heure souhaitées / arrivée').fill('2027-05-10T12:30');
   await page.getByLabel('Votre nom').fill('Client de test');
   await page.getByLabel('Téléphone de contact').fill('0600000000');
@@ -192,12 +194,17 @@ test('reservation request stays pending until professional accepts; customer can
   await expect(page.locator('article')).toContainText('En attente');
   await expect(page.getByRole('button',{name:'Accepter',exact:true})).toHaveCount(0);
   await page.getByRole('button',{name:'Se déconnecter'}).click();
-  await login(page,'author');await page.goto('/reservations.html');
+  await login(page,'author');await page.goto('/particulier.html');
+  await expect(page.locator('article')).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Accepter',exact:true})).toHaveCount(0);
+  await page.goto('/reservations.html');
+  await expect(page.getByRole('heading',{name:'Demandes reçues'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Envoyer la demande'})).toHaveCount(0);
   page.on('dialog',dialog=>dialog.accept('Disponibilité vérifiée. À bientôt.'));
   await page.getByRole('button',{name:'Accepter',exact:true}).click();
   await expect(page.locator('article')).toContainText('Acceptée');
   await page.getByRole('button',{name:'Se déconnecter'}).click();
-  await login(page,'reviewer');await page.goto('/reservations.html');
+  await login(page,'reviewer');await page.goto('/particulier.html');
   await expect(page.locator('article')).toContainText('Disponibilité vérifiée');
   await page.getByRole('button',{name:'Annuler ma demande'}).click();
   await expect(page.locator('article')).toContainText('Annulée');
@@ -209,4 +216,19 @@ test('connection error never falls back to the fictional catalogue',async({page}
   await page.goto('/index.html#explorer');
   await expect(page.getByRole('heading',{name:'Impossible de charger Morvan Explorer'})).toBeVisible({timeout:20000});
   await expect(page.getByText('Une auberge de village')).toHaveCount(0);
+});
+
+test('personal login preserves the selected place and old reservation links redirect',async({page,context})=>{
+ const db=await backend(context,true);
+ try {
+  await page.goto('/reservations.html?place=00000000-0000-0000-0000-000000000020');
+  await expect(page).toHaveURL(/particulier.html\?place=/);
+  await expect(page.locator('a[href="./pro.html"]')).toHaveCount(0);
+  await expect(page.getByRole('navigation',{name:'Mon espace particulier'})).toBeVisible();
+  await page.getByLabel('Adresse e-mail').fill('reviewer@example.test');
+  await page.getByLabel('Mot de passe').fill('test-password');
+  await page.getByRole('button',{name:'Se connecter',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Envoyer la demande'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Mon extension Réservations'})).toHaveCount(0);
+ }finally{await db.close();}
 });

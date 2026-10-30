@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   return {
     root: 'demo', envDir: '..', base: './',
     build: { outDir: '../dist', emptyOutDir: true, rollupOptions: { input: {
-      explorer: resolve('demo/index.html'), pro: resolve('demo/pro.html'), reservations: resolve('demo/reservations.html')
+      explorer: resolve('demo/index.html'), pro: resolve('demo/pro.html'), reservations: resolve('demo/reservations.html'), particulier: resolve('demo/particulier.html')
     } } }
   };
 });
