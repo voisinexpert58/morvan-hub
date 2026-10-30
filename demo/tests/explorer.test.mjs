@@ -6,12 +6,12 @@ import path from 'node:path';
 const root=path.resolve(import.meta.dirname,'..');
 const file=relative=>fs.readFileSync(path.join(root,relative),'utf8');
 
-test('Le point d’entrée public est Morvan Explorer, et le Pro est séparé',()=>{
+test('Le point d’entrée public est Bourgogne Explorer, et le Pro est séparé',()=>{
   const home=file('index.html');const pro=file('pro.html');
-  assert.match(home,/<title>Morvan Explorer/);
+  assert.match(home,/<title>Bourgogne Explorer/);
   assert.match(home,/\.\/explorer\/app\.mjs/);
   assert.match(pro,/pro\/app\.mjs/);
-  assert.match(file('core/app.mjs'),/Voir Morvan Explorer \(site public\)/);
+  assert.match(file('core/app.mjs'),/Voir Bourgogne Explorer \(site public\)/);
   assert.ok(!home.includes('core/app.mjs'));
 });
 

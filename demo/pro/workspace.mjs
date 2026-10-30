@@ -26,7 +26,7 @@ export async function mountPro(root, { explorerHref = './index.html#explorer' } 
   const button = (action, text, id = '') => `<button type="button" data-action="${action}" data-id="${e(id)}" ${busy?'disabled':''}>${text}</button>`;
   const canEdit = c => c.organization_id ? memberships.some(m => m.organization_id === c.organization_id && ['owner','admin','editor'].includes(m.role)) : c.author_id === user.id;
   const canReview = c => reviews.get(c.organization_id) && c.author_id !== user.id && c.last_editor_id !== user.id;
-  const frame = content => `<main class="pro-workspace"><header><a href="${e(explorerHref)}">← Morvan Explorer</a><h1>Morvan Pro</h1>${user?`<p>${e(user.email)}</p>${button('logout','Se déconnecter')}`:'<p>Connectez-vous pour proposer une adresse et suivre sa validation.</p>'}</header><p role="status" aria-live="polite">${e(notice)}</p>${content}</main>`;
+  const frame = content => `<main class="pro-workspace"><header><a href="${e(explorerHref)}">← Bourgogne Explorer</a><h1>Bourgogne Pro</h1>${user?`<p>${e(user.email)}</p>${button('logout','Se déconnecter')}`:'<p>Connectez-vous pour proposer une adresse et suivre sa validation.</p>'}</header><p role="status" aria-live="polite">${e(notice)}</p>${content}</main>`;
   function render() {
     releasePhotoDownloads();
     if (!user) {
@@ -168,7 +168,7 @@ export async function mountPro(root, { explorerHref = './index.html#explorer' } 
   });
   try {
     if (configuration().mode !== 'connected') {
-      root.innerHTML = frame('<section><h2>Connexion non configurée</h2><p>Le projet Supabase doit être créé et configuré avant de pouvoir utiliser Morvan Pro.</p></section>'); return;
+      root.innerHTML = frame('<section><h2>Connexion non configurée</h2><p>Le projet Supabase doit être créé et configuré avant de pouvoir utiliser Bourgogne Pro.</p></section>'); return;
     }
     client=await getClient(); repo=repository(client);
     client.auth.onAuthStateChange((event, session)=>{

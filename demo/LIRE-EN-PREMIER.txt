@@ -1,4 +1,4 @@
-MORVAN EXPLORER ET MORVAN PRO — V1
+BOURGOGNE EXPLORER ET BOURGOGNE PRO — V1
 
 Les entrées utilisent maintenant le client Supabase et nécessitent Vite.
 Le serveur Python historique ne permet pas de compiler cette intégration.

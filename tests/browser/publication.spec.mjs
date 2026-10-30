@@ -214,7 +214,7 @@ test('reservation request stays pending until professional accepts; customer can
 test('connection error never falls back to the fictional catalogue',async({page})=>{
   await page.route('https://morvan-test.supabase.co/**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"message":"Service indisponible"}'}));
   await page.goto('/index.html#explorer');
-  await expect(page.getByRole('heading',{name:'Impossible de charger Morvan Explorer'})).toBeVisible({timeout:20000});
+  await expect(page.getByRole('heading',{name:'Impossible de charger Bourgogne Explorer'})).toBeVisible({timeout:20000});
   await expect(page.getByText('Une auberge de village')).toHaveCount(0);
 });
 
