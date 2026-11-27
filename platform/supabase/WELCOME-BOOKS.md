@@ -1,5 +1,13 @@
 # Livrets d'accueil publics
 
+## Images et lien depuis les fiches
+
+La migration `20261030102518_welcome_book_photos.sql` ajoute une galerie de cinq images maximum (JPEG, PNG ou WebP, 5 Mio par fichier), stockées dans le bucket privé `welcome-photos`. L'éditeur affiche les aperçus, permet de retirer les associations et conserve les fichiers sélectionnés pour réessayer en cas d'échec de transfert. Le texte peut être enregistré avant les images ; une erreur l'indique explicitement. Les images sont présentées dans une galerie en tête du livret, pas affectées individuellement aux rubriques.
+
+Les associations du brouillon et de la version publique sont distinctes. La publication copie les associations du brouillon ; une modification privée ne change pas les images déjà publiées. La lecture Storage vérifie la RLS des livrets. Aucun remplacement ou effacement d'objet n'est autorisé au navigateur : les fichiers orphelins restent stockés mais ne sont pas lisibles publiquement. Une purge administrative future doit employer l'API Storage après vérification des références ; aucune suppression automatique n'est incluse.
+
+Explorer charge les identifiants des livrets publics et affiche « Consulter le livret d’accueil » dans la fiche de chaque hébergement concerné. Aucun lien n'est proposé pour un livret absent, privé, révoqué ou retiré. Le catalogue est actualisé au retour de focus. Les tests couvrent import, affichage, bouton, retrait, versions, fichiers étrangers et confidentialité des brouillons. Le bouton du gîte de démonstration a aussi été testé sur la base réelle.
+
 Première livraison du 30 octobre 2026. Référence fournie par l'utilisateur : [livret Le Mhère-veille](https://www.livret-accueil.lemhereveille.fr/), consulté dans Chromium. La structure et les couleurs ont inspiré un modèle réutilisable ; aucun contenu confidentiel, numéro réel, photo ou PDF du site de référence n'a été importé. Le site d'origine n'a pas été modifié.
 
 ## Parcours

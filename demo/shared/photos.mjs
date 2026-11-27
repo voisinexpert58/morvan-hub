@@ -25,7 +25,7 @@ export async function validateImageContent(file) {
 
 // Download through Storage RLS, rather than publishing a permanently accessible URL.
 // Revoke Blob URLs on navigation/logout, and fetch only photos in the viewport.
-export function hydratePhotos(root, getClient) {
+export function hydratePhotos(root, getClient, bucket = PHOTO_BUCKET) {
   let active = true;
   const urls = [];
   const requests = new Map();
@@ -34,7 +34,7 @@ export function hydratePhotos(root, getClient) {
     try {
       if (!requests.has(path)) requests.set(path, (async()=>{
         const client=await getClient();
-        const {data,error}=await client.storage.from(PHOTO_BUCKET).download(path);
+        const {data,error}=await client.storage.from(bucket).download(path);
         if (error) throw error;
         if (!active) return null;
         const url=URL.createObjectURL(data);urls.push(url);return url;
