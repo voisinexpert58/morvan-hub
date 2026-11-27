@@ -5,7 +5,7 @@ import { installStorageFixture } from '../helpers/storage.mjs';
 
 // HTTP boundary double: real supabase-js and PostgreSQL/RLS; GoTrue and PostgREST
 // are simulated. No remote project and no real credentials are used by these tests.
-async function backend(context) {
+async function backend(context, professional=false) {
   const db = new PGlite();
   await db.exec(`create role anon; create role authenticated; create schema auth;
     create table auth.users(id uuid primary key);
@@ -18,6 +18,14 @@ async function backend(context) {
   }
   const ids={author:'00000000-0000-0000-0000-000000000001',reviewer:'00000000-0000-0000-0000-000000000002'};
   await db.exec(`insert into auth.users values ('${ids.author}'),('${ids.reviewer}'); insert into private.editorial_reviewers values ('${ids.reviewer}');`);
+  if(professional) await db.exec(`
+    insert into public.organizations(id,slug,name) values('00000000-0000-0000-0000-000000000010','auberge','Mon auberge');
+    insert into public.organization_members(organization_id,user_id,role) values('00000000-0000-0000-0000-000000000010','${ids.author}','editor');
+    insert into public.contributions(id,author_id,last_editor_id,organization_id,name,category,town,description,status)
+    values('00000000-0000-0000-0000-000000000020','${ids.author}','${ids.author}','00000000-0000-0000-0000-000000000010','Auberge vérifiée','Hébergements','Mhère','Une auberge accueillante.','published');
+    insert into public.places(id,name,category,town,description,details) select id,name,category,town,description,details from public.contributions;
+    insert into private.verified_place_management(contribution_id,organization_id,verified_by) values('00000000-0000-0000-0000-000000000020','00000000-0000-0000-0000-000000000010','${ids.reviewer}');
+  `);
   const user = id=>({id,aud:'authenticated',role:'authenticated',email:(id===ids.author?'author':'reviewer')+'@example.test',app_metadata:{provider:'email'},user_metadata:{},created_at:new Date().toISOString()});
   const token=id=>[btoa('{}'),btoa(JSON.stringify({sub:id,role:'authenticated',exp:Math.floor(Date.now()/1000)+3600})), 'test-signature'].join('.');
   let queue=Promise.resolve();
@@ -56,10 +64,10 @@ async function backend(context) {
         const path=url.pathname.replace('/rest/v1/','');
         if(path.startsWith('rpc/')) {
           const name=path.slice(4);const args=request.postDataJSON();
-          const names={can_review_contributions:['p_organization_id'],save_contribution:['p_id','p_expected_version','p_organization_id','p_name','p_category','p_town','p_description','p_details'],set_contribution_photos:['p_id','p_expected_version','p_paths'],transition_contribution:['p_id','p_expected_version','p_action','p_note'],delete_contribution:['p_id','p_expected_version']}[name];
+          const names={can_publish_place_update:['p_id'],publish_place_update:['p_id','p_expected_version'],can_review_contributions:['p_organization_id'],save_contribution:['p_id','p_expected_version','p_organization_id','p_name','p_category','p_town','p_description','p_details'],set_contribution_photos:['p_id','p_expected_version','p_paths'],transition_contribution:['p_id','p_expected_version','p_action','p_note'],delete_contribution:['p_id','p_expected_version']}[name];
           if(!names)return json({message:'Unknown RPC'},400);
           const result=await db.query(`select * from public.${name}(${names.map((_,i)=>'$'+(i+1)).join(',')})`,names.map(n=>args[n]??null));
-          return json(name==='can_review_contributions'?result.rows[0].can_review_contributions:result.rows[0]);
+          return json(['can_review_contributions','can_publish_place_update'].includes(name)?result.rows[0][name]:result.rows[0]);
         }
         if(!['contributions','places','organizations','organization_members'].includes(path))return json({message:'Unknown table'},400);
         return json((await db.query(`select * from public.${path}`)).rows);
@@ -146,6 +154,29 @@ test('draft → submission → review → publication → private revision → w
     await expect(page.getByText('Aucune contribution accessible')).toBeVisible();
     await page.goto('/index.html#explorer');await expect(page.getByText('0 idées de découvertes')).toBeVisible();
   }finally{await db.close();}
+});
+
+test('verified professional publishes routine edits but submits identity changes',async({page,context})=>{
+ const db=await backend(context,true);
+ try {
+  await login(page,'author');
+  await page.getByRole('button',{name:'Reprendre en brouillon'}).click();
+  await page.getByRole('button',{name:'Modifier',exact:true}).click();
+  await page.getByLabel('Description',{exact:true}).fill('Notre auberge vous accueille toute la semaine.');
+  await page.getByRole('button',{name:'Enregistrer le brouillon'}).click();
+  await page.getByRole('button',{name:'Publier mes modifications'}).click();
+  await expect(page.locator('article')).toContainText('Publiée');
+  await page.goto('/index.html#explorer');
+  await expect(page.getByText('Notre auberge vous accueille toute la semaine.')).toBeVisible();
+  await page.goto('/pro.html');
+  await page.getByRole('button',{name:'Reprendre en brouillon'}).click();
+  await page.getByRole('button',{name:'Modifier',exact:true}).click();
+  await page.getByLabel('Nom du lieu').fill('Autre établissement');
+  await page.getByRole('button',{name:'Enregistrer le brouillon'}).click();
+  await expect(page.locator('article')).toContainText('Autre établissement');
+  await expect(page.getByRole('button',{name:'Publier mes modifications'})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Soumettre à validation'})).toBeVisible();
+ } finally {await db.close();}
 });
 
 test('connection error never falls back to the fictional catalogue',async({page})=>{

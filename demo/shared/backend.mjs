@@ -44,6 +44,8 @@ export function repository(client) {
     },
     async organizations() { return checked(await client.from('organizations').select('id,name').order('name')); },
     async canReview(organizationId) { return checked(await client.rpc('can_review_contributions', { p_organization_id: organizationId })); },
+    async canPublishUpdate(id) { return checked(await client.rpc('can_publish_place_update', { p_id: id })); },
+    async publishUpdate(current) { return checkedRow(await client.rpc('publish_place_update', { p_id: current.id, p_expected_version: current.version })); },
     async save(fields, current = null, organizationId = null) {
       return checkedRow(await client.rpc('save_contribution', {
         p_id: current?.id ?? null, p_expected_version: current?.version ?? null,
