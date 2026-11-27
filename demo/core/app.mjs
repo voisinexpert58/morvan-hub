@@ -11,7 +11,7 @@ const ICONS = { dashboard: '◫', map: '⌖', modules: '▦', settings: '⚙', h
 const moduleEnabled = mod => loadEnabledState(mod.id, state.org.id, mod.initiallyEnabled);
 const viewTitle = () => {
   if (state.view.startsWith('module:')) return state.modules.find(m => `module:${m.id}` === state.view)?.name ?? 'Module';
-  return {dashboard:'Vue d’ensemble', explorer:'Aperçu Explorer', modules:'Catalogue des modules', settings:'Paramètres'}[state.view] || 'Morvan Hub';
+  return {dashboard:'Vue d’ensemble', explorer:'Aperçu Explorer', modules:'Catalogue des modules', settings:'Paramètres'}[state.view] || 'Bourgogne Hub';
 };
 function icon(name) { return ICONS[name] || '◈'; }
 function moduleNav(mod) {
@@ -20,8 +20,8 @@ function moduleNav(mod) {
 function shell() {
   const enabled = state.modules.filter(moduleEnabled);
   return `<aside class="sidebar">
-    <div class="brand"><div class="brand-mark" aria-hidden="true">❧</div><div><div class="brand-title">morvan hub</div><div class="brand-sub">Plateforme modulaire</div></div></div>
-    <a class="go-public" href="./index.html">← Voir Morvan Explorer (site public)</a>
+    <div class="brand"><div class="brand-mark" aria-hidden="true">❧</div><div><div class="brand-title">bourgogne hub</div><div class="brand-sub">Plateforme modulaire</div></div></div>
+    <a class="go-public" href="./index.html">← Voir Bourgogne Explorer (site public)</a>
     <div class="section-label">Espace professionnel</div>
     <nav class="nav" aria-label="Navigation principale">
       ${[['dashboard','dashboard','Tableau de bord'],['explorer','map','Fiches en aperçu'],['modules','modules','Modules']].map(([page, sym, label]) => `<button class="${state.view===page?'active':''}" type="button" data-nav="${page}"><span class="nav-icon">${icon(sym)}</span>${label}</button>`).join('')}
@@ -33,7 +33,7 @@ function shell() {
     <div class="sidebar-foot"><strong>Prototype V1 en construction</strong><br>Modules chargés à l’exécution<br>Données de démonstration non publiées</div>
   </aside>
   <main class="main">
-    <header class="topbar"><div class="crumb"><a href="./index.html" class="crumb-return">← Guide public</a> · Morvan Hub <span aria-hidden="true">/</span> <strong>${e(viewTitle())}</strong></div><div class="top-actions">
+    <header class="topbar"><div class="crumb"><a href="./index.html" class="crumb-return">← Guide public</a> · Bourgogne Hub <span aria-hidden="true">/</span> <strong>${e(viewTitle())}</strong></div><div class="top-actions">
       <label class="crumb" for="org-select">Établissement</label>
       <select class="org-picker" id="org-select" aria-label="Choisir un établissement">${ORGS.map(o => `<option value="${e(o.id)}" ${o.id===state.org.id?'selected':''}>${e(o.name)}</option>`).join('')}</select>
       <div class="avatar" aria-hidden="true">MH</div>
@@ -43,7 +43,7 @@ function shell() {
 }
 function dashboard() {
   const enabled = state.modules.filter(moduleEnabled);
-  return `<div class="eyebrow">Votre espace numérique</div><h1 class="page-title">Bienvenue sur Morvan Hub.</h1>
+  return `<div class="eyebrow">Votre espace numérique</div><h1 class="page-title">Bienvenue sur Bourgogne Hub.</h1>
     <p class="lead">Un socle commun, des outils indépendants. Activez les modules nécessaires à votre activité, sans modifier l’application principale.</p>
     <div class="hero"><div><div class="hero-kicker">Une plateforme qui grandit avec vous</div><h2>Tous vos outils locaux.<br>Une seule interface.</h2><p>De l’accueil de vos visiteurs à la gestion des animations, chaque fonctionnalité se connecte à un même environnement.</p><button class="button tan" data-nav="modules">Découvrir les modules <span aria-hidden="true">→</span></button></div></div>
     <div class="stats">
@@ -70,7 +70,7 @@ function catalog() {
 function explorer() {
   const q = state.search.toLowerCase().trim();
   const matches = state.places.filter(p => [p.name,p.description,p.town,p.type].join(' ').toLowerCase().includes(q));
-  return `<div class="eyebrow">Guide public · Prévisualisation</div><h1 class="page-title">Morvan Explorer</h1><p class="lead">La base locale pourra alimenter automatiquement les outils professionnels. Pour l'instant, les lieux ci-dessous sont des exemples fictifs, non des recommandations vérifiées.</p>
+  return `<div class="eyebrow">Guide public · Prévisualisation</div><h1 class="page-title">Bourgogne Explorer</h1><p class="lead">La base locale pourra alimenter automatiquement les outils professionnels. Pour l'instant, les lieux ci-dessous sont des exemples fictifs, non des recommandations vérifiées.</p>
     <div class="form-row" style="margin-bottom:18px"><input id="place-search" class="search" type="search" placeholder="Chercher une commune, un lieu, une catégorie…" value="${e(state.search)}" aria-label="Rechercher une adresse"><button class="button" id="place-search-button">Rechercher</button></div>
     <div class="place-list">${matches.map(p=>`<div class="place-card"><div class="place-type">${e(p.type)}</div><h3>${e(p.name)}</h3><div class="subtle">⌖ ${e(p.town)}</div><p>${e(p.description)}</p><span class="pill off">${e(p.status)}</span></div>`).join('')||'<div class="empty">Aucun résultat dans le jeu de données de démonstration.</div>'}</div>`;
 }
@@ -144,3 +144,4 @@ async function init() {
   }
 }
 init();
+

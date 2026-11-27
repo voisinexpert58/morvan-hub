@@ -3,7 +3,7 @@ import type { PluginProps } from '@morvan/plugin-sdk';
 
 const cards = [
   {icon:'⌂',title:'Le logement',detail:'Informations et consignes utiles'},
-  {icon:'⌖',title:'Explorer le Morvan',detail:'Adresses vérifiées et découvertes locales'},
+  {icon:'⌖',title:'Explorer la Bourgogne',detail:'Adresses vérifiées et découvertes locales'},
   {icon:'▣',title:'Agenda du territoire',detail:'Marchés et événements de proximité'},
   {icon:'☎',title:'Contacts',detail:'Joindre votre hébergement'}
 ];
@@ -14,3 +14,4 @@ export default function Accueil({organization, coreApiVersion}: PluginProps) {
       {cards.map(card=><article key={card.title} style={{padding:16,border:'1px solid #e0e6de',borderRadius:12}}><span style={{fontSize:25}}>{card.icon}</span><h3>{card.title}</h3><p style={{color:'#657a6c',fontSize:13}}>{card.detail}</p></article>)}
     </div><p style={{fontSize:12,color:'#748679',marginTop:18}}>Données d'exemple — ne saisissez aucune information personnelle dans ce prototype.</p></div>;
 }
+
