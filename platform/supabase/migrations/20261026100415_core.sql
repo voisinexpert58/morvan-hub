@@ -124,3 +124,4 @@ create trigger audit_org_module_change
  for each row execute function private.audit_module_toggle();
 -- À compléter avant la production : tests pgTAP allow/deny, règles de facturation,
 -- révocation d'abonnement côté serveur et contrôle des actions métiers.
+
