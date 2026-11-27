@@ -1,5 +1,13 @@
 # Extension Réservations — première livraison
 
+## Espaces particulier et professionnel
+
+`particulier.html` est l'espace personnel : connexion/inscription, choix d'un établissement, envoi, suivi et annulation de ses propres demandes. Les liens « Demander une réservation » d'Explorer y mènent directement. L'accès « Mon espace » apparaît dans l'en-tête du guide. Le raccourci vers les favoris utilise les favoris existants du navigateur, sans synchronisation avec le compte.
+
+`reservations.html` est la boîte de réception professionnelle : demandes des établissements gérés, acceptation/refus et configuration de l'extension. Elle n'affiche pas de formulaire de demande personnelle. Les anciennes URL `reservations.html?place=...` redirigent vers l'espace particulier en conservant la fiche choisie.
+
+Les deux espaces partagent le même compte et la même session ; un professionnel peut aussi réserver à titre personnel. Les requêtes de l'espace particulier filtrent requester_id et celles de l'espace professionnel les établissements gérés, en complément des politiques RLS existantes. Aucun rôle ni droit de base n'est modifié par cette séparation des interfaces.
+
 Priorité choisie le 30 octobre 2026 parmi les sept extensions envisagées. Livré : demande de table ou de séjour, consultation de la réponse, acceptation/refus par le professionnel, annulation par le demandeur et ouverture/fermeture du service. Aucun paiement, notification e-mail, calcul de disponibilité, inventaire de chambres ou placement de tables. L'acceptation repose sur une vérification manuelle du professionnel.
 
 ## Accès et activation
