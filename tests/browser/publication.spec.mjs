@@ -26,6 +26,7 @@ async function backend(context, professional=false) {
     insert into public.places(id,name,category,town,description,details) select id,name,category,town,description,details from public.contributions;
     insert into private.verified_place_management(contribution_id,organization_id,verified_by) values('00000000-0000-0000-0000-000000000020','00000000-0000-0000-0000-000000000010','${ids.reviewer}');
   `);
+  if(professional)await db.exec("insert into public.reservation_settings(place_id,entitled,enabled,tables,stays) values('00000000-0000-0000-0000-000000000020',true,true,true,true)");
   const user = id=>({id,aud:'authenticated',role:'authenticated',email:(id===ids.author?'author':'reviewer')+'@example.test',app_metadata:{provider:'email'},user_metadata:{},created_at:new Date().toISOString()});
   const token=id=>[btoa('{}'),btoa(JSON.stringify({sub:id,role:'authenticated',exp:Math.floor(Date.now()/1000)+3600})), 'test-signature'].join('.');
   let queue=Promise.resolve();
@@ -64,12 +65,12 @@ async function backend(context, professional=false) {
         const path=url.pathname.replace('/rest/v1/','');
         if(path.startsWith('rpc/')) {
           const name=path.slice(4);const args=request.postDataJSON();
-          const names={can_publish_place_update:['p_id'],publish_place_update:['p_id','p_expected_version'],can_review_contributions:['p_organization_id'],save_contribution:['p_id','p_expected_version','p_organization_id','p_name','p_category','p_town','p_description','p_details'],set_contribution_photos:['p_id','p_expected_version','p_paths'],transition_contribution:['p_id','p_expected_version','p_action','p_note'],delete_contribution:['p_id','p_expected_version']}[name];
+          const names={manages_reservations:['p_id'],configure_reservations:['p_id','p_enabled','p_tables','p_stays'],request_reservation:['p_place','p_kind','p_start','p_end','p_guests','p_name','p_phone','p_message'],respond_reservation:['p_id','p_version','p_status','p_response'],can_publish_place_update:['p_id'],publish_place_update:['p_id','p_expected_version'],can_review_contributions:['p_organization_id'],save_contribution:['p_id','p_expected_version','p_organization_id','p_name','p_category','p_town','p_description','p_details'],set_contribution_photos:['p_id','p_expected_version','p_paths'],transition_contribution:['p_id','p_expected_version','p_action','p_note'],delete_contribution:['p_id','p_expected_version']}[name];
           if(!names)return json({message:'Unknown RPC'},400);
           const result=await db.query(`select * from public.${name}(${names.map((_,i)=>'$'+(i+1)).join(',')})`,names.map(n=>args[n]??null));
-          return json(['can_review_contributions','can_publish_place_update'].includes(name)?result.rows[0][name]:result.rows[0]);
+          return json(['can_review_contributions','can_publish_place_update','manages_reservations'].includes(name)?result.rows[0][name]:result.rows[0]);
         }
-        if(!['contributions','places','organizations','organization_members'].includes(path))return json({message:'Unknown table'},400);
+        if(!['contributions','places','organizations','organization_members','reservation_settings','reservation_requests'].includes(path))return json({message:'Unknown table'},400);
         return json((await db.query(`select * from public.${path}`)).rows);
       }catch(error){return json({message:error.message,code:error.code},403);}
     });
@@ -177,6 +178,30 @@ test('verified professional publishes routine edits but submits identity changes
   await expect(page.getByRole('button',{name:'Publier mes modifications'})).toHaveCount(0);
   await expect(page.getByRole('button',{name:'Soumettre à validation'})).toBeVisible();
  } finally {await db.close();}
+});
+
+test('reservation request stays pending until professional accepts; customer can cancel',async({page,context})=>{
+ const db=await backend(context,true);
+ try {
+  await login(page,'reviewer');
+  await page.goto('/reservations.html?place=00000000-0000-0000-0000-000000000020');
+  await page.getByLabel('Date et heure souhaitées / arrivée').fill('2027-05-10T12:30');
+  await page.getByLabel('Votre nom').fill('Client de test');
+  await page.getByLabel('Téléphone de contact').fill('0600000000');
+  await page.getByRole('button',{name:'Envoyer la demande'}).click();
+  await expect(page.locator('article')).toContainText('En attente');
+  await expect(page.getByRole('button',{name:'Accepter',exact:true})).toHaveCount(0);
+  await page.getByRole('button',{name:'Se déconnecter'}).click();
+  await login(page,'author');await page.goto('/reservations.html');
+  page.on('dialog',dialog=>dialog.accept('Disponibilité vérifiée. À bientôt.'));
+  await page.getByRole('button',{name:'Accepter',exact:true}).click();
+  await expect(page.locator('article')).toContainText('Acceptée');
+  await page.getByRole('button',{name:'Se déconnecter'}).click();
+  await login(page,'reviewer');await page.goto('/reservations.html');
+  await expect(page.locator('article')).toContainText('Disponibilité vérifiée');
+  await page.getByRole('button',{name:'Annuler ma demande'}).click();
+  await expect(page.locator('article')).toContainText('Annulée');
+ }finally{await db.close();}
 });
 
 test('connection error never falls back to the fictional catalogue',async({page})=>{
