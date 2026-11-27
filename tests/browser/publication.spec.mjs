@@ -27,6 +27,7 @@ async function backend(context, professional=false) {
     insert into private.verified_place_management(contribution_id,organization_id,verified_by) values('00000000-0000-0000-0000-000000000020','00000000-0000-0000-0000-000000000010','${ids.reviewer}');
   `);
   if(professional)await db.exec("insert into public.reservation_settings(place_id,entitled,enabled,tables,stays) values('00000000-0000-0000-0000-000000000020',true,true,true,true)");
+  if(professional)await db.exec("insert into public.welcome_book_drafts(place_id,entitled) values('00000000-0000-0000-0000-000000000020',true)");
   const user = id=>({id,aud:'authenticated',role:'authenticated',email:(id===ids.author?'author':'reviewer')+'@example.test',app_metadata:{provider:'email'},user_metadata:{},created_at:new Date().toISOString()});
   const token=id=>[btoa('{}'),btoa(JSON.stringify({sub:id,role:'authenticated',exp:Math.floor(Date.now()/1000)+3600})), 'test-signature'].join('.');
   let queue=Promise.resolve();
@@ -65,12 +66,12 @@ async function backend(context, professional=false) {
         const path=url.pathname.replace('/rest/v1/','');
         if(path.startsWith('rpc/')) {
           const name=path.slice(4);const args=request.postDataJSON();
-          const names={manages_reservations:['p_id'],configure_reservations:['p_id','p_enabled','p_tables','p_stays'],request_reservation:['p_place','p_kind','p_start','p_end','p_guests','p_name','p_phone','p_message'],respond_reservation:['p_id','p_version','p_status','p_response'],can_publish_place_update:['p_id'],publish_place_update:['p_id','p_expected_version'],can_review_contributions:['p_organization_id'],save_contribution:['p_id','p_expected_version','p_organization_id','p_name','p_category','p_town','p_description','p_details'],set_contribution_photos:['p_id','p_expected_version','p_paths'],transition_contribution:['p_id','p_expected_version','p_action','p_note'],delete_contribution:['p_id','p_expected_version']}[name];
+          const names={save_welcome_book:['p_id','p_version','p_title','p_content'],publish_welcome_book:['p_id','p_version','p_publish'],manages_reservations:['p_id'],configure_reservations:['p_id','p_enabled','p_tables','p_stays'],request_reservation:['p_place','p_kind','p_start','p_end','p_guests','p_name','p_phone','p_message'],respond_reservation:['p_id','p_version','p_status','p_response'],can_publish_place_update:['p_id'],publish_place_update:['p_id','p_expected_version'],can_review_contributions:['p_organization_id'],save_contribution:['p_id','p_expected_version','p_organization_id','p_name','p_category','p_town','p_description','p_details'],set_contribution_photos:['p_id','p_expected_version','p_paths'],transition_contribution:['p_id','p_expected_version','p_action','p_note'],delete_contribution:['p_id','p_expected_version']}[name];
           if(!names)return json({message:'Unknown RPC'},400);
           const result=await db.query(`select * from public.${name}(${names.map((_,i)=>'$'+(i+1)).join(',')})`,names.map(n=>args[n]??null));
           return json(['can_review_contributions','can_publish_place_update','manages_reservations'].includes(name)?result.rows[0][name]:result.rows[0]);
         }
-        if(!['contributions','places','organizations','organization_members','reservation_settings','reservation_requests'].includes(path))return json({message:'Unknown table'},400);
+        if(!['contributions','places','organizations','organization_members','reservation_settings','reservation_requests','welcome_book_drafts','welcome_books'].includes(path))return json({message:'Unknown table'},400);
         return json((await db.query(`select * from public.${path}`)).rows);
       }catch(error){return json({message:error.message,code:error.code},403);}
     });
@@ -208,6 +209,35 @@ test('reservation request stays pending until professional accepts; customer can
   await expect(page.locator('article')).toContainText('Disponibilité vérifiée');
   await page.getByRole('button',{name:'Annuler ma demande'}).click();
   await expect(page.locator('article')).toContainText('Annulée');
+ }finally{await db.close();}
+});
+
+test('welcome book draft, preview, publish, private revision and withdrawal',async({page,context})=>{
+ const db=await backend(context,true);
+ try{
+  await login(page,'author');await page.goto('/livrets.html');
+  await page.getByLabel('Titre du livret',{exact:true}).fill('Bienvenue au gîte de test');
+  await page.getByLabel('Message de bienvenue',{exact:true}).fill('Bienvenue pour un séjour paisible en Bourgogne.');
+  await page.getByRole('button',{name:'Prévisualiser',exact:true}).click();
+  await expect(page.locator('#preview')).toContainText('Aperçu du brouillon — non publié');
+  await page.getByRole('button',{name:'Enregistrer le brouillon'}).click();
+  await expect(page.getByRole('status')).toContainText('Brouillon enregistré');
+  page.on('dialog',dialog=>dialog.accept());
+  await page.getByRole('button',{name:'Publier la version enregistrée'}).click();
+  await expect(page.getByRole('status')).toContainText('Livret publié');
+  const link=await page.getByRole('link',{name:'Ouvrir le livret public'}).getAttribute('href');
+  await page.goto(link);await expect(page.getByRole('heading',{name:'Bienvenue au gîte de test',exact:true})).toBeVisible();
+  await expect(page.getByText('Bienvenue pour un séjour paisible en Bourgogne.')).toBeVisible();
+  await page.goto('/livrets.html');
+  await expect(page.getByLabel('Message de bienvenue',{exact:true})).toBeVisible();
+  await page.getByLabel('Message de bienvenue',{exact:true}).fill('Une nouvelle version encore privée.',{timeout:5000});
+  await page.getByRole('button',{name:'Publier la version enregistrée'}).click();
+  await expect(page.getByRole('status')).toContainText('Enregistrez les modifications');
+  await page.getByRole('button',{name:'Enregistrer le brouillon'}).click();await expect(page.getByRole('status')).toContainText('Brouillon enregistré');
+  await page.goto(link);await expect(page.getByText('Bienvenue pour un séjour paisible en Bourgogne.')).toBeVisible();
+  await page.goto('/livrets.html');await page.getByRole('button',{name:'Retirer le livret public'}).click();
+  await expect(page.getByRole('status')).toContainText('Livret retiré');await page.goto(link);
+  await expect(page.getByRole('heading',{name:'Livret indisponible'})).toBeVisible();
  }finally{await db.close();}
 });
 

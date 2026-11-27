@@ -1,0 +1,45 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile,readdir} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+import {installStorageFixture} from './helpers/storage.mjs';
+test('welcome book: private drafts, public snapshots, permissions, versions and withdrawal',async t=>{
+ const db=new PGlite();t.after(()=>db.close());
+ await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ grant usage on schema public,auth to anon,authenticated;grant execute on function auth.uid() to anon,authenticated;`);
+ await installStorageFixture(db);
+ for(const f of (await readdir(new URL('../platform/supabase/migrations/',import.meta.url))).filter(f=>f.endsWith('.sql')).sort())await db.exec((await readFile(new URL('../platform/supabase/migrations/'+f,import.meta.url),'utf8')).replace('create extension if not exists pgcrypto;',''));
+ const owner='00000000-0000-0000-0000-000000000001',guest='00000000-0000-0000-0000-000000000002',other='00000000-0000-0000-0000-000000000003',org='00000000-0000-0000-0000-000000000010',place='00000000-0000-0000-0000-000000000020';
+ await db.exec(`insert into auth.users values('${owner}'),('${guest}'),('${other}');insert into public.organizations(id,slug,name) values('${org}','restaurant','Restaurant');
+ insert into public.organization_members(organization_id,user_id,role) values('${org}','${owner}','owner');
+ insert into public.contributions(id,author_id,last_editor_id,organization_id,name,category,town,description,status) values('${place}','${owner}','${owner}','${org}','Restaurant test','Hébergements','Mhère','Une description de test.','published');
+ insert into public.places(id,name,category,town,description,details) select id,name,category,town,description,details from public.contributions;
+ insert into private.verified_place_management(contribution_id,organization_id,verified_by) values('${place}','${org}','${other}');
+ insert into public.welcome_book_drafts(place_id,entitled) values('${place}',true);`);
+ const as=async uid=>{await db.exec(`reset role;set role ${uid?'authenticated':'anon'}`);await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid||'']);};
+ const denied=(f,code='42501')=>assert.rejects(f,e=>e.code===code);
+ const save=(version,content={welcome:'Bienvenue dans notre hébergement.'})=>db.query('select * from public.save_welcome_book($1,$2,$3,$4)',[place,version,'Livret de test',content]).then(r=>r.rows[0]);
+ const publish=(version,enabled=true)=>db.query('select public.publish_welcome_book($1,$2,$3)',[place,version,enabled]);
+ const publicRows=()=>db.query('select * from public.welcome_books').then(r=>r.rows);
+ await as();assert.equal((await publicRows()).length,0);await denied(()=>db.query('select * from public.welcome_book_drafts'));await denied(()=>save(1));
+ await as(other);await denied(()=>save(1));assert.equal((await db.query('select * from public.welcome_book_drafts')).rows.length,0);
+ await as(owner);await denied(()=>publish(1),'22023');await denied(()=>save(1,{unknown:'bad'}),'22023');await denied(()=>save(1,{welcome:12}),'22023');await denied(()=>save(1,{welcome:'x'.repeat(5001)}),'22023');
+ let book=await save(1);assert.equal(book.version,2);await denied(()=>save(1),'40001');await publish(2);
+ await as();assert.equal((await publicRows())[0].content.welcome,'Bienvenue dans notre hébergement.');
+ await as(owner);book=await save(2,{welcome:'Une révision encore privée.'});
+ await as();assert.equal((await publicRows())[0].content.welcome,'Bienvenue dans notre hébergement.');
+ await as(owner);await denied(()=>publish(2),'40001');await publish(3);
+ await as();assert.equal((await publicRows())[0].content.welcome,'Une révision encore privée.');
+ await as(owner);await publish(3,false);assert.equal((await publicRows()).length,0);await publish(3);
+ await db.exec('reset role');await db.exec('update public.welcome_book_drafts set entitled=false');
+ await as();assert.equal((await publicRows()).length,0);await as(owner);await denied(()=>save(3));await denied(()=>publish(3));await publish(3,false);
+ await db.exec('reset role');await db.exec('update public.welcome_book_drafts set entitled=true');await db.query('delete from public.organization_members where user_id=$1',[owner]);
+ await as(owner);assert.equal((await db.query('select * from public.welcome_book_drafts')).rows.length,0);await denied(()=>save(3));
+});
+
+test('welcome rendering escapes host text and omits blank sections',async()=>{
+ const {bookMarkup}=await import('../demo/welcome/model.mjs');
+ const html=bookMarkup({title:'<img src=x>',content:{welcome:'<script>alert(1)</script>',house:'',stay:'Un séjour paisible.'}});
+ assert.ok(!html.includes('<script>'));assert.ok(html.includes('&lt;script&gt;'));assert.ok(!html.includes('id="house"'));assert.ok(html.includes('id="stay"'));
+});
